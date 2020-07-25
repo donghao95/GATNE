@@ -27,7 +27,9 @@ def get_batches(pairs, neighbors, batch_size):
         yield (np.array(x).astype(np.int32), np.array(y).reshape(-1, 1).astype(np.int32), np.array(t).astype(np.int32), np.array(neigh).astype(np.int32)) 
 
 def train_model(network_data, feature_dic, log_name):
+    #生成游走序列
     all_walks = generate_walks(network_data, args.num_walks, args.walk_length, args.schema, file_name)
+    #返回关于单词的二叉树和
     vocab, index2word = generate_vocab(all_walks)
     train_pairs = generate_pairs(all_walks, vocab, args.window_size)
 

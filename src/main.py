@@ -29,8 +29,9 @@ def get_batches(pairs, neighbors, batch_size):
 def train_model(network_data, feature_dic, log_name):
     #生成游走序列
     all_walks = generate_walks(network_data, args.num_walks, args.walk_length, args.schema, file_name)
-    #返回关于单词的二叉树和
+    #返回关于单词的二叉树和所有单词的列表
     vocab, index2word = generate_vocab(all_walks)
+    #生成训练对
     train_pairs = generate_pairs(all_walks, vocab, args.window_size)
 
     edge_types = list(network_data.keys())
@@ -49,12 +50,15 @@ def train_model(network_data, feature_dic, log_name):
 
     neighbors = [[[] for __ in range(edge_type_count)] for _ in range(num_nodes)]
     for r in range(edge_type_count):
+        #对每一种边
         g = network_data[edge_types[r]]
+        #每个节点在对应边上的相邻节点
         for (x, y) in g:
             ix = vocab[x].index
             iy = vocab[y].index
             neighbors[ix][r].append(iy)
             neighbors[iy][r].append(ix)
+        #空的节点用负样本填充，不足的节点用复制样本填充，多余的节点随机截取
         for i in range(num_nodes):
             if len(neighbors[i][r]) == 0:
                 neighbors[i][r] = [i] * neighbor_samples
@@ -66,8 +70,10 @@ def train_model(network_data, feature_dic, log_name):
     graph = tf.Graph()
 
     if feature_dic is not None:
+        #特征数量
         feature_dim = len(list(feature_dic.values())[0])
         print('feature dimension: ' + str(feature_dim))
+        #初始化特征矩阵，行名为index，值为特征值
         features = np.zeros((num_nodes, feature_dim), dtype=np.float32)
         for key, value in feature_dic.items():
             if key in vocab:
@@ -78,9 +84,9 @@ def train_model(network_data, feature_dic, log_name):
 
         if feature_dic is not None:
             node_features = tf.Variable(features, name='node_features', trainable=False)
+            #随机生成权重，初始嵌入
             feature_weights = tf.Variable(tf.truncated_normal([feature_dim, embedding_size], stddev=1.0))
             linear = tf.layers.Dense(units=embedding_size, activation=tf.nn.tanh, use_bias=True)
-
             embed_trans = tf.Variable(tf.truncated_normal([feature_dim, embedding_size], stddev=1.0 / math.sqrt(embedding_size)))
             u_embed_trans = tf.Variable(tf.truncated_normal([edge_type_count, feature_dim, embedding_u_size], stddev=1.0 / math.sqrt(embedding_size)))
 

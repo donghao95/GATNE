@@ -93,6 +93,7 @@ def load_training_data(f_name):
             all_nodes.append(y)
     all_nodes = list(set(all_nodes))
     print('Total training nodes: ' + str(len(all_nodes)))
+    #分类型获取所有的边
     return edge_data_by_type
 
 
@@ -162,19 +163,19 @@ def generate_pairs(all_walks, vocab, window_size):
     return pairs
 
 def generate_vocab(all_walks):
-    index2word = []
+    index2word = []#所有的单词
     raw_vocab = defaultdict(int)
-
+    #获得每一个单词出现的频率
     for walks in all_walks:
         for walk in walks:
             for word in walk:
                 raw_vocab[word] += 1
-
+    #构造二叉树
     vocab = {}
     for word, v in iteritems(raw_vocab):
         vocab[word] = Vocab(count=v, index=len(index2word))
         index2word.append(word)
-
+    #排序
     index2word.sort(key=lambda word: vocab[word].count, reverse=True)
     for i, word in enumerate(index2word):
         vocab[word].index = i
